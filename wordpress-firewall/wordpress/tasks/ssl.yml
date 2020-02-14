@@ -1,0 +1,109 @@
+   ##################
+  # SSL CERTIFICATE #
+  ##################
+
+---
+
+- name: Ensure Installation of packages openssl and mod_ssl moadule
+  yum: 
+   name: "{{ item }}"
+   state: latest
+  with_items:
+   - openssl
+   - mod_ssl
+   - python-pip
+  tags: install_module
+
+- pip:
+   name: pyOpenSSL==19.1.0
+  tags: pyopenssl
+
+- name: Create directory for privatekey
+  file:
+   path: "{{ item }}"
+   state: directory
+  with_items:
+   - "{{ key_dir }}"
+  tags: create_directory_key
+
+- name: Generate on openssl private key
+  openssl_privatekey:
+   path: "{{ key_dir }}project-me.key"
+   type: RSA
+   size: 2048
+  tags: gen_key
+
+- name: Generate a self signed openssl certificate
+  command: |
+   openssl req -x509 -days 365 -nodes \
+   -subj '/C=IR/ST=Teh/L=Tehran View/O=IT/CN=www.project.me' \
+   -key "{{ key_dir }}project-me.key" \
+   -out "{{ cert_dir }}project-me.crt"
+  tags: gen_cert
+
+- name: Generate dhparam
+  shell: |
+   echo "openssl dhparam -out '{{ cert_dir }}dhparam.pem' 2048"
+  tags: gen_dhparam
+
+- name: Add dhparam to cert
+  shell: cat "{{ cert_dir }}dhparam.pem" | sudo tee -a "{{ cert_dir }}project-me.crt"
+  tags: add_dhparam
+
+- name: Add SSL setting to httpd configuration file
+  lineinfile:
+   path: /etc/httpd/conf.d/project.me.conf
+   regexp: "^        CustomLog"
+   insertafter: "CustomLog"
+   line: "{{ item }}"
+   state: present
+  with_items:
+   - "       SSLCertificateKeyFile {{ key_dir }}project-me.key"
+   - "       SSLCertificateFile {{ cert_dir }}project-me.crt"
+   - "       SSLEngine On"
+   - ""
+  tags: add_ssl
+
+- name: Add Redirect to https
+  lineinfile:
+   path: /etc/httpd/conf.d/project.me.conf
+   regexp: "^<VirtualHost *:80>"
+   insertbefore: "DirectoryIndex"
+   line: "{{ item }}"
+   state: present
+  with_items:
+    - '        Redirect "/" "https://project.me/"'
+    - "</VirtualHost>"
+    - "<VirtualHost *:443>"
+    - "        ServerName project.me"
+    - "        ServerAlias www.project.me"
+    - ""
+  tags: add_redirect_line
+
+- name: Uncomment DocumentRoot to ssl configuration file
+  lineinfile:
+   path: /etc/httpd/conf.d/ssl.conf
+   regexp: "#DocumentRoot"
+   line: 'DocumentRoot "/var/www/html"'
+  tags: add_documentroot
+
+- name: Change ServerName to ssl configuration file
+  lineinfile:
+   path: /etc/httpd/conf.d/ssl.conf
+   regexp: "#ServerName"
+   line: "ServerName www.project.me:443"
+  tags: add_servername
+
+- name: Add SSLCertificateFile to ssl configuration file
+  lineinfile:
+   path: /etc/httpd/conf.d/ssl.conf
+   regexp: "SSLCertificateFile "
+   line: "SSLCertificateFile {{ cert_dir }}project-me.crt"
+  tags: add_ssl_cert
+
+- name: Add SSLCertificateKeyFile to ssl configuration file
+  lineinfile:
+   path: /etc/httpd/conf.d/ssl.conf
+   regexp: "SSLCertificateKeyFile "
+   line: "SSLCertificateKeyFile {{ key_dir }}project-me.key"
+  tags: add_ssl_key
