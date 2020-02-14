@@ -1,2 +1,73 @@
 ---
 # tasks file for firewall
+
+- name: Install iptables on the external firewall
+  yum:
+   name: iptables-services
+   state: present
+  notify: iptables
+  tags: install_iptables_externall
+
+#- name: Start iptables
+#  service:
+#   name: iptables
+#   state: started
+#   enabled: yes
+#  tags: start_iptables
+
+- name: Flush all tables
+  iptables:
+   table: "{{ item }}"
+   flush: yes
+  with_items: [ 'filter', 'nat', 'mangle' ]
+  tags: flush_table_2
+
+- name: Create new chain in nat table
+  shell: |
+   iptables -t nat -N PREROUTING_WEB
+   iptables -t nat -N POSTROUTING_WEB
+  tags: create_chain_nat
+
+- name: Add new role to PREROUTING_WEB chain
+  iptables:
+   table: nat
+   chain: PREROUTING_WEB
+   action: insert
+   protocol: tcp
+   destination: "{{ firewall_ip }}"
+   destination_port: 80
+   jump: DNAT
+   to_destination: "{{ webserver_ip }}:80"
+  tags: add_role_prerouting_web
+
+- name: Add new role to POSTROUTING_WEB chain
+  iptables:
+   table: nat
+   chain: POSTROUTING_WEB
+   action: insert
+   protocol: tcp
+   jump: MASQUERADE
+  tags: add_role_postrouting_web
+
+- name: Add created chain to the original chain of the nat table
+  iptables:
+   table: nat
+   chain: PREROUTING
+   action: insert
+   jump: PREROUTING_WEB
+  tags: add_chain_prerouting_web
+
+- name: Add created chain to the original chain of the nat table
+  iptables:
+   table: nat
+   chain: POSTROUTING
+   action: insert
+   jump: POSTROUTING_WEB
+  tags: add_chain_postrouting_web
+
+- name: save iptables
+  shell: |
+   iptables-save > /etc/sysconfig/iptables
+   echo 1 > /proc/sys/net/ipv4/ip_forward
+  notify: iptables
+  tags: save_roles

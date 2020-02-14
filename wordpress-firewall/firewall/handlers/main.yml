@@ -1,2 +1,17 @@
 ---
-# handlers file for firewall
+
+# HANDLERS FILE FOR FIREWALL
+
+- name: iptables
+  service:
+   name: iptables
+   state: started
+   enabled: yes
+  tags: start_iptables
+
+- name: iptables
+  service:
+   name: iptables
+   state: restarted
+  tags: restart_iptables
+

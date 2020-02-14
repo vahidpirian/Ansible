@@ -1,2 +1,7 @@
 ---
-# vars file for firewall
+
+# FIREWALL VARS
+
+firewall_ip: 192.168.1.8
+webserver_ip: 192.168.1.7
+host_name_firewall: iptables
