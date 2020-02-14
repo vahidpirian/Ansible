@@ -1,2 +1,6 @@
 ---
-# vars file for wordpress
+# vars for mariadb
+
+hash_password: $1$LV2SlkxT$7fKul0sveRPgHuJtYAW5D/
+host_name: node
+src_cnf: /Ansible/wordpress/files/my.cnf

@@ -1,0 +1,68 @@
+   #########################
+  # DATABASE CONFIGURATION #
+  #########################
+---
+
+- name: Mariadb installation
+  yum: 
+   name: "{{ item }}"
+   state: latest
+  with_items:
+   - mariadb-server
+   - MySQL-python
+  tags: install_mariadb
+
+- name: Start mariadb
+  service: 
+   name: mariadb
+   state: started
+   enabled: yes
+  tags: start_mariadb
+
+- name: Delete anonymous mysql server user
+  mysql_user:
+   login_user: root
+   login_password: '{{ hash_password }}'
+   check_implicit_admin: yes
+   user: ""
+   host: "{{ item }}"
+   state: absent
+  with_items:
+   - ""
+   - "{{ host_name }}"
+   - localhost
+  tags: remove_user_database
+
+- name: Remove the mysql test database
+  action: mysql_db login_user=root login_password={{ hash_password }} db=test state=absent
+
+- name: Store mysql root password
+  copy:
+   src: "{{ src_cnf }}"
+   dest: /root/.my.cnf
+   owner: root
+   group: root
+   mode: 0600
+
+- name: Create database for wordpress
+  mysql_db:
+   login_user: root
+   login_password: "{{ hash_password }}"
+   name: wordpress
+   state: present
+  tags: create_database
+
+- name: Change root user password on first run
+  mysql_user:
+   login_user: root
+   login_password: "{{ hash_password }}"
+   check_implicit_admin: yes
+   name: root
+   password: "{{ hash_password }}"
+   priv: '*.*:ALL:GRANT'
+   host: "{{ item }}"
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+  notify: restart_mariadb
