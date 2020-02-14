@@ -12,3 +12,4 @@
 ```
 
 ## The second host is a firewall listening to the outside world and sending all requests to the web server.   
+> just type your hosts ip address in the variables files.
