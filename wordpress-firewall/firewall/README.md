@@ -1,38 +1,43 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+This role is to put a firewall in front of a web server that provides the WordPress website.		
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+This role requires a server to install the firewall.		
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+In this role, three variables are defined as follows:		
 
-Dependencies
-------------
+- firewall_ip: Ip address your firewall server		
+- webserver_ip: Ip address your web serber		
+- host_name_firewall: your firewall host name		
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
+```yml		
+- hosts: "{{ your_host }}"		
+  become: yes		
+  vars:		
+   - worker		
+   - 192.168.1.8		
+   - 192.168.1.7		
+  tasks:		
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+   - name: Add new rule to PREROUTING_WEB chain		
+     iptables:		
+      table: nat		
+      chain: PREROUTING_WEB		
+      action: insert		
+      protocol: tcp		
+      destination: "{{ firewall_ip }}"		
+      destination_port: 80		
+      jump: DNAT		
+      to_destination: "{{ webserver_ip }}:80"		
+     tags: add_rule_prerouting_web		
+```		
