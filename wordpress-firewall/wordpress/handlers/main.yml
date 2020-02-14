@@ -1,2 +1,20 @@
 ---
 # handlers file for wordpress
+
+- name: restart_mariadb
+  service:
+   name: mariadb
+   state: restarted
+  tags: restart_mariadb
+
+- name: restart_apache
+  service:
+   name: httpd
+   state: restarted
+  tags: restart_apache
+
+- name: restart_iptables
+  service:
+   name: iptables
+   state: restarted
+  tags: restart_iptables

@@ -19,4 +19,7 @@ host_name_wordpress: node
 key_dir: /etc/ssl/private/
 cert_dir: /etc/ssl/certs/
 
+# IPTABLES VARS
 
+external_ip_firewall: 192.168.1.8
+webserver_ip: 192.168.1.7

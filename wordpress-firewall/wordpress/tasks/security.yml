@@ -1,0 +1,133 @@
+   #########################
+  # SECURITY CONFIGURATION #
+  #########################
+
+# THIS SECTION HAS A FIREWALL INSTALLED ON THE WEB SERVER THAT ONLY LISTEN TO THE EXTERNAL FIREWALL.
+---
+
+- name: Installing iptalbes on the Apache web server
+  package:
+   name: iptables-services
+   state: latest
+  tags: install_iptables
+
+- name:
+  service:
+   name: iptables
+   state: started
+   enabled: yes
+  tags: start_iptables
+
+- name: Flush all tables
+  iptables:
+   table: "{{ item }}"
+   flush: yes
+  with_items: [ 'filter', 'nat', 'mangle' ]
+  tags: flush_table
+
+- name: Create new chain in filter table
+  shell: |
+   iptables -t filter -N INPUT_WEB 
+   iptables -t filter -N OUTPUT_WEB
+  tags: create_chain
+
+- name: Add new role to INPUT_WEB chain
+  iptables:
+   table: filter
+   chain: INPUT_WEB
+   action: insert
+   protocol: tcp
+   source: "{{ external_ip_firewall }}"
+   destination: "{{ webserver_ip }}"
+   destination_port: 80
+   jump: ACCEPT
+  tags: add_role_1
+
+- name: Add new role to INPUT_WEB chain
+  iptables:
+   table: filter
+   chain: INPUT_WEB
+   action: insert
+   protocol: tcp
+   destination: "{{ webserver_ip }}"
+   destination_port: 443
+   jump: ACCEPT
+  tags: add_role_2
+
+- name: Add new role to OUTPUT_WEB chain
+  iptables:
+   table: filter
+   chain: OUTPUT_WEB
+   action: insert
+   ctstate: RELATED,ESTABLISHED
+   jump: ACCEPT
+  tags: add_role_3
+
+# THIS RULE IS FOR NON-DISRUPTION WHEN EXECUTING PROJECT
+
+- name: Add new role to OUTPUT_WEB chain
+  iptables:
+   table: filter
+   chain: INPUT_WEB
+   action: insert
+   source: 192.168.1.4
+   protocol: tcp
+   destination: "{{ webserver_ip }}"
+   destination_port: 22
+   jump: ACCEPT
+  tags: add_role_4
+
+# THIS RULE IS FOR NON-DISRUPTION FROM ANSIBLE HOST TO THE WEB SERVER HOST
+
+- name: Add new role to OUTPUT_WEB chain
+  iptables:
+   table: filter
+   chain: INPUT_WEB
+   action: insert
+   source: 192.168.1.6
+   protocol: tcp
+   destination: "{{ webserver_ip }}"
+   destination_port: 22
+   jump: ACCEPT
+  tags: add_role_5
+
+- name: Add created chain to the original chain of the filter table
+  iptables:
+   table: filter
+   chain: INPUT
+   action: insert
+   jump: INPUT_WEB
+  tags: add_chain_input_web
+
+- name: Add created chain to the original chain of the filter table
+  iptables:
+   table: filter
+   chain: OUTPUT
+   action: insert
+   jump: OUTPUT_WEB
+  tags: add_chain_output_web
+
+- name: Drop all entries
+  iptables:
+   table: filter
+   chain: INPUT
+   action: append
+   jump: DROP
+  tags: drop_all_input
+
+- name: Drop all entries 1
+  iptables:
+   table: filter
+   chain: OUTPUT
+   action: append
+   jump: DROP
+  tags: drop_all_output
+
+- name: save iptables
+  shell: |
+   iptables-save > /etc/sysconfig/iptables
+  notify:
+   - restart_mariadb
+   - restart_apache
+   - restart_iptables
+  tags: save_roles
