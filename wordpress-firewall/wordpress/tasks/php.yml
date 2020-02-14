@@ -1,0 +1,39 @@
+   ####################
+  # PHP CONFIGURATION #
+  ####################
+
+---
+
+- name: Install epel-release package 
+  yum:
+   name: epel-release
+   state: latest
+  tags: install_epel_release
+
+- name: Installing the repository for php
+  yum:
+   name: "{{ item }}"
+   state: latest
+  with_items:
+   - http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+   - yum-utils
+  tags: install_repo
+
+- name: Run the command to use the php repository
+  command: "yum-config-manager --enable remi-php72"
+  tags: run_command
+
+- name: Install php packages
+  yum:
+   name: "{{ item }}"
+   state: latest
+  with_items:
+   - php
+   - php-common
+   - php-opcache
+   - php-mcrypt
+   - php-cli
+   - php-gd
+   - php-curl
+   - php-mysqlnd
+  tags: install_php
