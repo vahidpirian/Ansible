@@ -1,0 +1,14 @@
+---
+- hosts: node
+  become: yes
+  gather_facts: yes
+  become_method: sudo
+  roles:
+   - wordpress
+
+- hosts: iptables
+  become: yes
+  gather_facts: yes
+  become_method: sudo
+  roles:
+   - firewall
