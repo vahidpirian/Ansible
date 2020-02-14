@@ -1,2 +1,9 @@
 ---
-# tasks file for wordpress
+
+# INCLUDE FILES
+
+- include: mariadb.yml
+- include: php.yml
+- include: httpd.yml
+- include: ssl.yml
+- include: security.yml
