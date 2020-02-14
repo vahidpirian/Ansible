@@ -4,3 +4,13 @@
 hash_password: $1$LV2SlkxT$7fKul0sveRPgHuJtYAW5D/
 host_name: node
 src_cnf: /Ansible/wordpress-firewall/wordpress/files/my.cnf
+
+# httpd and wordpress vars
+
+dest_wordpress: /tmp
+database_project: wordpress
+username_project: root
+password_project: $1$LV2SlkxT$7fKul0sveRPgHuJtYAW5D/
+host_name_wordpress: node
+
+

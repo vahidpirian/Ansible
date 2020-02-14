@@ -1,0 +1,66 @@
+   #######################
+  # APACHE CONFIGURATION #
+  #######################
+
+---
+
+- name: Apache web server installation
+  yum:
+   name: httpd
+   state: latest
+  tags: install_apache
+
+- name: Start httpd
+  service:
+   name: httpd
+   state: started
+   enabled: yes
+  tags: start_httpd
+
+- name: Create directory for wordpress files
+  file:
+   path: /var/www/html/
+   state: directory
+   owner: apache
+   group: apache
+   mode: '0755'
+  tags: create_directory
+
+- name: Create required files
+  file: 
+   path: "{{ item }}" 
+   state: touch
+  with_items:
+   - /var/log/httpd/project.me-error.log
+   - /var/log/httpd/project.me-access.log
+   - /etc/httpd/conf.d/project.me.conf
+  tags: create_files
+
+- name: Copy apache configuration file
+  template:
+   src: httpd.conf
+   dest: /etc/httpd/conf.d/project.me.conf
+  tags: temp_file
+
+- name: Install unzip for unarchive wrdpress
+  yum:
+   name: unzip
+   state: latest
+  tags: install_unzip
+
+- name: Download wordpress
+  unarchive:
+   src: https://wordpress.org/latest.zip
+   dest: "{{ dest_wordpress }}"
+   remote_src: True
+  tags: download_wordpress
+
+- name: Move wordpress files to the desired location
+  shell: mv "{{ dest_wordpress }}"/wordpress/* /var/www/html/
+  tags: mv_wordpress
+
+- name: Copy configuration wordpress to the desired location
+  template:
+   src: wp-config-sample.php
+   dest: /var/www/html/wp-config.php
+  tags: copy_config_wordpress
