@@ -19,6 +19,21 @@
    enabled: yes
   tags: start_mariadb
 
+- name: Change root user password on first run
+  mysql_user:
+   login_user: root
+   login_password: "{{ hash_password }}"
+   check_implicit_admin: yes
+   name: root
+   password: "{{ hash_password }}"
+   priv: '*.*:ALL:GRANT'
+   host: "{{ item }}"
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+  notify: restart_mariadb
+
 - name: Delete anonymous mysql server user
   mysql_user:
    login_user: root
@@ -31,10 +46,12 @@
    - ""
    - "{{ host_name }}"
    - localhost
+   - 127.0.0.1
+   - ::1
   tags: remove_user_database
 
 - name: Remove the mysql test database
-  action: mysql_db login_user=root login_password={{ hash_password }} db=test state=absent
+  action: mysql_db login_user=root db=test login_password={{ hash_password }} state=absent
 
 - name: Store mysql root password
   copy:
@@ -52,17 +69,17 @@
    state: present
   tags: create_database
 
-- name: Change root user password on first run
-  mysql_user:
-   login_user: root
-   login_password: "{{ hash_password }}"
-   check_implicit_admin: yes
-   name: root
-   password: "{{ hash_password }}"
-   priv: '*.*:ALL:GRANT'
-   host: "{{ item }}"
-  with_items:
-   - 127.0.0.1
-   - ::1
-   - localhost
-  notify: restart_mariadb
+#- name: Change root user password on first run
+#  mysql_user:
+#   login_user: root
+#   login_password: "{{ hash_password }}"
+#   check_implicit_admin: yes
+#   name: root
+#   password: "{{ hash_password }}"
+#   priv: '*.*:ALL:GRANT'
+#   host: "{{ item }}"
+#  with_items:
+#   - 127.0.0.1
+#   - ::1
+#   - localhost
+#  notify: restart_mariadb

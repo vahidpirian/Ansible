@@ -37,7 +37,7 @@
    chain: INPUT_WEB
    action: insert
    protocol: tcp
-   source: "{{ external_ip_firewall }}"
+   source: "{{ firewall_ip }}"
    destination: "{{ webserver_ip }}"
    destination_port: 80
    jump: ACCEPT

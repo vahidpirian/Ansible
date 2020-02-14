@@ -2,6 +2,6 @@
 
 # FIREWALL VARS
 
-firewall_ip: 192.168.1.8
-webserver_ip: 192.168.1.7
+firewall_ip: ==> YOUR FIREWALL IP
+webserver_ip: ==> YOUR WEB SERVER IP
 host_name_firewall: iptables

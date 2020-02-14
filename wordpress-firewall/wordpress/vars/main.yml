@@ -4,7 +4,7 @@
 
 hash_password: $1$LV2SlkxT$7fKul0sveRPgHuJtYAW5D/
 host_name: node
-src_cnf: /Ansible/wordpress-firewall/wordpress/files/my.cnf
+src_cnf: my.cnf
 
 # HTTPD AND WORDPRESS VARS
 
@@ -21,5 +21,5 @@ cert_dir: /etc/ssl/certs/
 
 # IPTABLES VARS
 
-external_ip_firewall: 192.168.1.8
-webserver_ip: 192.168.1.7
+firewall_ip: ==> YOUR FIREWALL IP
+webserver_ip: ==> YOUR WEB SERVER IP
